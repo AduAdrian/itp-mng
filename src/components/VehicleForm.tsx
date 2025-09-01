@@ -9,15 +9,14 @@ import {
   getAllVehicles, 
   deleteVehicle,
   updateVehicle,
-  clearAllVehicles,
   type Vehicle 
 } from '../config/database';
 
 const VehicleForm: React.FC = () => {
   const [formData, setFormData] = useState<Vehicle>({
-    nume: '',
     nr_inmatriculare: '',
     valabilitate: '',
+    perioada_valabilitate: '1_an',
     nr_telefon: ''
   });
 
@@ -51,9 +50,9 @@ const VehicleForm: React.FC = () => {
         expiryDate.setDate(today.getDate() + 3);
         
         const testVehicle = {
-          nume: 'Test ADRIAN',
           nr_inmatriculare: 'SV14YCP',
           valabilitate: expiryDate.toISOString().split('T')[0],
+          perioada_valabilitate: '1_an' as const,
           nr_telefon: '0756596565'
         };
         
@@ -108,25 +107,23 @@ const VehicleForm: React.FC = () => {
     try {
       setLoading(true);
       const phoneNumber = vehicle.nr_telefon;
-      const nume = vehicle.nume;
       const nrInmatriculare = vehicle.nr_inmatriculare;
       const valabilitate = vehicle.valabilitate;
       
       // Calculăm câte zile rămân
       const diffDays = getDaysUntilExpiry(valabilitate);
       
-      setMessage(`📱 Se trimite SMS către ${phoneNumber} pentru ${nume} prin SMS Advert...`);
+      setMessage(`📱 Se trimite SMS către ${phoneNumber} pentru ${nrInmatriculare}...`);
       
       // Mesajul personalizat pentru vehicul
-      const personalizedMessage = `Buna ${nume}! ITP ${nrInmatriculare} expira in ${diffDays} ${diffDays === 1 ? 'zi' : 'zile'} (${formatDate(valabilitate)}). Reinnnoiti-l!`;
+      const personalizedMessage = `Buna ziua! ITP pentru vehiculul ${nrInmatriculare} expira in ${diffDays} ${diffDays === 1 ? 'zi' : 'zile'} (${formatDate(valabilitate)}). Va rugam sa-l reinnnoiti la timp!`;
       
-      setMessage(`📱 Se trimite SMS prin SMS Advert către ${phoneNumber} pentru ${nume}...`);
+      setMessage(`📱 Se trimite SMS prin SMS Advert către ${phoneNumber} pentru ${nrInmatriculare}...`);
 
       // Pentru testare - logurile pentru debugging
       console.log('SMS Advert Request:', {
         url: SMS_ADVERT_BASE_URL,
         phone: phoneNumber,
-        nume: nume,
         vehicul: nrInmatriculare,
         message: personalizedMessage,
         messageLength: personalizedMessage.length,
@@ -151,7 +148,7 @@ const VehicleForm: React.FC = () => {
       console.log('SMS Advert Response:', result);
 
       if (response.ok && result.successMessage) {
-        setMessage(`✅ SMS trimis prin SMS Advert către ${nume} (${phoneNumber})! ID: ${result.msgId}, Cost: ${result.unitsCost} unități`);
+        setMessage(`✅ SMS trimis prin SMS Advert către ${phoneNumber}! ID: ${result.msgId}, Cost: ${result.unitsCost} unități`);
         console.log('SMS trimis cu succes prin SMS Advert');
       } else {
         const errorMsg = result.message || result.error || response.statusText || 'Eroare necunoscută';
@@ -191,7 +188,7 @@ const VehicleForm: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 3000)); // 3 secunde între SMS-uri
         }
       } catch (error) {
-        console.error(`Eroare la trimiterea SMS pentru ${vehicle.nume}:`, error);
+        console.error(`Eroare la trimiterea SMS pentru ${vehicle.nr_inmatriculare}:`, error);
       }
     }
     
@@ -204,9 +201,9 @@ const VehicleForm: React.FC = () => {
   const downloadExcelTemplate = () => {
     const templateData = [
       {
-        'Nume': 'Exemplu Ion',
         'Nr. Înmatriculare': 'B123ABC',
         'Valabilitate ITP': '2025-12-31',
+        'Perioada Valabilitate': '1_an',
         'Telefon': '0755123456'
       }
     ];
@@ -217,9 +214,9 @@ const VehicleForm: React.FC = () => {
 
     // Setează lățimea coloanelor
     const colWidths = [
-      { wch: 20 }, // Nume
       { wch: 18 }, // Nr. Înmatriculare
       { wch: 15 }, // Valabilitate ITP
+      { wch: 18 }, // Perioada Valabilitate
       { wch: 15 }  // Telefon
     ];
     worksheet['!cols'] = colWidths;
@@ -240,9 +237,9 @@ const VehicleForm: React.FC = () => {
 
     const exportData = vehicles.map((vehicle, index) => ({
       'Nr.': index + 1,
-      'Nume': vehicle.nume,
       'Nr. Înmatriculare': vehicle.nr_inmatriculare,
       'Valabilitate ITP': vehicle.valabilitate,
+      'Perioada Valabilitate': vehicle.perioada_valabilitate,
       'Telefon': vehicle.nr_telefon,
       'Status': isExpiringSoon(vehicle.valabilitate) ? 'EXPIRĂ CURÂND!' : 'Valid'
     }));
@@ -298,14 +295,14 @@ const VehicleForm: React.FC = () => {
           
           // Mapează coloanele din Excel
           const vehicleData: Vehicle = {
-            nume: row['Nume'] || row.nume || '',
             nr_inmatriculare: row['Nr. Înmatriculare'] || row['Nr. Inmatriculare'] || row.nr_inmatriculare || '',
             valabilitate: row['Valabilitate ITP'] || row['Valabilitate'] || row.valabilitate || '',
+            perioada_valabilitate: (row['Perioada Valabilitate'] || row.perioada_valabilitate || '1_an') as '6_luni' | '1_an' | '2_ani',
             nr_telefon: row['Telefon'] || row.nr_telefon || ''
           };
 
           // Validează datele
-          if (!vehicleData.nume || !vehicleData.nr_inmatriculare || !vehicleData.valabilitate || !vehicleData.nr_telefon) {
+          if (!vehicleData.nr_inmatriculare || !vehicleData.valabilitate || !vehicleData.nr_telefon) {
             errors.push(`Rândul ${i + 2}: Date incomplete`);
             continue;
           }
@@ -351,25 +348,6 @@ const VehicleForm: React.FC = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  // 4. Șterge toate datele (pentru curățenie)
-  const clearAllData = async () => {
-    if (!confirm('Sigur vrei să ștergi TOATE vehiculele din baza de date? Această acțiune nu poate fi anulată!')) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await clearAllVehicles();
-      setVehicles([]);
-      setMessage('✅ Toate datele au fost șterse!');
-    } catch (error) {
-      console.error('Eroare la ștergerea datelor:', error);
-      setMessage('❌ Eroare la ștergerea datelor!');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Edit vehicle
   const handleEdit = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
@@ -380,9 +358,9 @@ const VehicleForm: React.FC = () => {
   const handleCancelEdit = () => {
     setEditingVehicle(null);
     setFormData({
-      nume: '',
       nr_inmatriculare: '',
       valabilitate: '',
+      perioada_valabilitate: '1_an',
       nr_telefon: ''
     });
   };
@@ -415,7 +393,7 @@ const VehicleForm: React.FC = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -432,7 +410,7 @@ const VehicleForm: React.FC = () => {
     }
 
     // Validare simplă
-    if (!formData.nume || !formData.nr_inmatriculare || !formData.valabilitate || !formData.nr_telefon) {
+    if (!formData.nr_inmatriculare || !formData.valabilitate || !formData.nr_telefon) {
       setMessage('Toate câmpurile sunt obligatorii!');
       return;
     }
@@ -450,9 +428,9 @@ const VehicleForm: React.FC = () => {
         setMessage('Vehicul adăugat cu succes!');
         // Reset form
         setFormData({
-          nume: '',
           nr_inmatriculare: '',
           valabilitate: '',
+          perioada_valabilitate: '1_an',
           nr_telefon: ''
         });
         
@@ -528,7 +506,7 @@ const VehicleForm: React.FC = () => {
             </div>
 
             {/* File Upload */}
-            <div className="col-md-3">
+            <div className="col-md-4">
               <input
                 type="file"
                 ref={fileInputRef}
@@ -545,18 +523,6 @@ const VehicleForm: React.FC = () => {
                 📂 Import Excel
               </label>
             </div>
-
-            {/* Clear All */}
-            <div className="col-md-3">
-              <button
-                onClick={clearAllData}
-                className="btn btn-danger w-100 fw-bold"
-                disabled={loading || vehicles.length === 0}
-                title="Șterge toate datele din baza de date"
-              >
-                🗑️ Șterge Tot ({vehicles.length})
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -566,21 +532,6 @@ const VehicleForm: React.FC = () => {
         <div className="card-body p-4">
           <form onSubmit={handleSubmit}>
             <div className="row g-3 align-items-end">
-              {/* Nume */}
-              <div className="col-md-3">
-                <label htmlFor="nume" className="form-label fw-semibold text-dark">Nume</label>
-                <input
-                  type="text"
-                  className="form-control form-control-lg"
-                  id="nume"
-                  name="nume"
-                  value={formData.nume}
-                  onChange={handleChange}
-                  placeholder="Numele complet"
-                  required
-                />
-              </div>
-
               {/* Număr înmatriculare */}
               <div className="col-md-3">
                 <label htmlFor="nr_inmatriculare" className="form-label fw-semibold text-dark">Nr. Înmatriculare</label>
@@ -596,9 +547,26 @@ const VehicleForm: React.FC = () => {
                 />
               </div>
 
-              {/* Data valabilitate */}
+              {/* Perioada Valabilitate */}
               <div className="col-md-2">
-                <label htmlFor="valabilitate" className="form-label fw-semibold text-dark">Valabilitate</label>
+                <label htmlFor="perioada_valabilitate" className="form-label fw-semibold text-dark">Perioada</label>
+                <select
+                  className="form-control form-control-lg"
+                  id="perioada_valabilitate"
+                  name="perioada_valabilitate"
+                  value={formData.perioada_valabilitate}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="6_luni">6 Luni</option>
+                  <option value="1_an">1 An</option>
+                  <option value="2_ani">2 Ani</option>
+                </select>
+              </div>
+
+              {/* Data valabilitate */}
+              <div className="col-md-3">
+                <label htmlFor="valabilitate" className="form-label fw-semibold text-dark">Valabilitate ITP</label>
                 <input
                   type="date"
                   className="form-control form-control-lg"
@@ -684,8 +652,8 @@ const VehicleForm: React.FC = () => {
                 <thead className="table-dark">
                   <tr>
                     <th className="fw-bold">#</th>
-                    <th className="fw-bold">Nume</th>
                     <th className="fw-bold">Nr. Înmatriculare</th>
+                    <th className="fw-bold">Perioada</th>
                     <th className="fw-bold">Valabilitate ITP</th>
                     <th className="fw-bold">Telefon</th>
                     <th className="fw-bold text-center vehicle-actions-column">Acțiuni</th>
@@ -697,16 +665,18 @@ const VehicleForm: React.FC = () => {
                     return (
                       <tr key={vehicle.id || index} className={expiring ? 'table-danger' : ''}>
                         <td className="fw-bold text-primary">{index + 1}</td>
-                        <td className="fw-semibold">
-                          {vehicle.nume}
-                          {expiring && (
-                            <span className="badge bg-danger ms-2">EXPIRĂ CURÂND!</span>
-                          )}
-                        </td>
                         <td>
                           <span className="badge bg-success px-3 py-2 vehicle-nr-badge">
                             {vehicle.nr_inmatriculare}
                           </span>
+                          {expiring && (
+                            <span className="badge bg-danger ms-2">EXPIRĂ CURÂND!</span>
+                          )}
+                        </td>
+                        <td className="fw-semibold">
+                          {vehicle.perioada_valabilitate === '6_luni' && '6 Luni'}
+                          {vehicle.perioada_valabilitate === '1_an' && '1 An'}
+                          {vehicle.perioada_valabilitate === '2_ani' && '2 Ani'}
                         </td>
                         <td className={expiring ? 'text-danger fw-bold' : 'text-muted'}>
                           {formatDate(vehicle.valabilitate)}
@@ -731,7 +701,7 @@ const VehicleForm: React.FC = () => {
                               <button
                                 onClick={() => sendSMSNotification(vehicle)}
                                 className="btn btn-info btn-sm me-1"
-                                title={`Trimite SMS prin SMS Advert către ${vehicle.nume} - ${vehicle.nr_telefon}`}
+                                title={`Trimite SMS prin SMS Advert către ${vehicle.nr_telefon}`}
                                 disabled={loading}
                               >
                                 📱 SMS

@@ -4,9 +4,9 @@
 // Vehicle interface
 export interface Vehicle {
   id?: number;
-  nume: string;
   nr_inmatriculare: string;
   valabilitate: string;
+  perioada_valabilitate: '6_luni' | '1_an' | '2_ani';
   nr_telefon: string;
 }
 
