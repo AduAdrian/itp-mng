@@ -45,6 +45,7 @@ const VehicleForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [stayConnectedForever, setStayConnectedForever] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // SMS Advert API Configuration - TESTED AND WORKING ✅
@@ -58,6 +59,40 @@ const VehicleForm: React.FC = () => {
       addTestDataIfNeeded();
     }, 1000);
   }, []);
+
+  // Stay Connected Forever - Previne închiderea aplicației
+  useEffect(() => {
+    if (stayConnectedForever) {
+      // Previne închiderea tab-ului/ferestrei
+      const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+        event.preventDefault();
+        event.returnValue = 'Aplicația rulează în modul "Rămâi conectat forever". Sigur vrei să închizi?';
+        return event.returnValue;
+      };
+
+      // Menține ecranul activ prin simularea activității
+      const keepAlive = () => {
+        // Simulează activitate pentru a preveni sleep mode
+        document.dispatchEvent(new MouseEvent('mousemove', {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        }));
+      };
+
+      // Adaugă event listener pentru prevenirea închiderii
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // Simulează activitate la fiecare 30 de secunde
+      const keepAliveInterval = setInterval(keepAlive, 30000);
+
+      // Cleanup la unmount
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        clearInterval(keepAliveInterval);
+      };
+    }
+  }, [stayConnectedForever]);
 
   // Adaugă date de test pentru demonstrație
   const addTestDataIfNeeded = async () => {
@@ -692,6 +727,39 @@ const VehicleForm: React.FC = () => {
                     >
                       🔄 Reconectare
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stay Connected Forever Section */}
+          <div className="mt-4">
+            <div className={`card ${stayConnectedForever ? 'border-warning' : 'border-secondary'}`}>
+              <div className="card-body">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="stayConnectedForever"
+                      checked={stayConnectedForever}
+                      onChange={(e) => setStayConnectedForever(e.target.checked)}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor="stayConnectedForever">
+                      🔒 Rămâi conectat (Forever)
+                    </label>
+                    <small className="d-block text-muted">
+                      {stayConnectedForever ? 
+                        '🟡 Modul Forever ACTIV - Aplicația va rula non-stop și va preveni închiderea' : 
+                        '⚫ Modul Forever INACTIV - Aplicația poate fi închisă normal'
+                      }
+                    </small>
+                  </div>
+                  <div>
+                    <small className={`badge ${stayConnectedForever ? 'bg-warning' : 'bg-secondary'}`}>
+                      {stayConnectedForever ? '🔄 ACTIV 24/7' : '⏸️ DEZACTIVAT'}
+                    </small>
                   </div>
                 </div>
               </div>
