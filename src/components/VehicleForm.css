@@ -1,5 +1,10 @@
 /* 🚗 Vehicle Management System - Clean & Modern Design */
 
+/* Hidden File Input */
+.hidden-file-input {
+  display: none;
+}
+
 /* Main Container /* Specialized Inputs - Enhanced */
 .vehicle-nr-input {
   font-family: 'JetBrains Mono', 'Fira Code', monospace !important;

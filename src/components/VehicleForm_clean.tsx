@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './VehicleForm.css';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { 
   initializeDatabase, 
   testConnection, 
@@ -330,26 +329,6 @@ const VehicleForm: React.FC = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  // Clear all data
-  const clearAllData = () => {
-    if (window.confirm('Sigur doriți să ștergeți toate datele? Această acțiune nu poate fi anulată!')) {
-      try {
-        localStorage.removeItem('vehicles');
-        setVehicles([]);
-        setFormData({
-          nr_inmatriculare: '',
-          valabilitate: calculateExpiryDate('1_an'), // Calculează automat data
-          perioada_valabilitate: '1_an',
-          nr_telefon: ''
-        });
-        setMessage('✅ Toate datele au fost șterse!');
-      } catch (error) {
-        console.error('Eroare la ștergerea datelor:', error);
-        setMessage('❌ Eroare la ștergerea datelor');
-      }
-    }
-  };
-
   // Edit vehicle
   const handleEditVehicle = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
@@ -370,7 +349,10 @@ const VehicleForm: React.FC = () => {
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
     try {
       setLoading(true);
-      await updateVehicle(updatedVehicle);
+      if (!updatedVehicle.id) {
+        throw new Error('Vehicle ID is required for update');
+      }
+      await updateVehicle(updatedVehicle.id, updatedVehicle);
       
       // Refresh list
       const vehicleList = await getAllVehicles();
@@ -664,7 +646,7 @@ const VehicleForm: React.FC = () => {
                       type="file"
                       accept=".xlsx,.xls"
                       onChange={importFromExcel}
-                      style={{ display: 'none' }}
+                      className="hidden-file-input"
                       disabled={loading}
                     />
                   </div>

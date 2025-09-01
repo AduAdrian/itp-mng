@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './VehicleForm.css';
 import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
 import { 
   initializeDatabase, 
   testConnection, 
@@ -45,7 +44,11 @@ const VehicleForm: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>('');
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
-  const [stayConnectedForever, setStayConnectedForever] = useState<boolean>(false);
+  const [stayConnectedForever, setStayConnectedForever] = useState<boolean>(() => {
+    // Încarcă starea din localStorage la startup
+    const saved = localStorage.getItem('stayConnectedForever');
+    return saved === 'true';
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // SMS Advert API Configuration - TESTED AND WORKING ✅
@@ -91,6 +94,16 @@ const VehicleForm: React.FC = () => {
         window.removeEventListener('beforeunload', handleBeforeUnload);
         clearInterval(keepAliveInterval);
       };
+    }
+  }, [stayConnectedForever]);
+
+  // Salvează starea în localStorage de fiecare dată când se schimbă
+  useEffect(() => {
+    localStorage.setItem('stayConnectedForever', stayConnectedForever.toString());
+    if (stayConnectedForever) {
+      setMessage('🔒 Modul "Rămâi conectat Forever" este ACTIV! Aplicația va rula non-stop.');
+    } else {
+      setMessage('⚫ Modul "Rămâi conectat Forever" este DEZACTIVAT.');
     }
   }, [stayConnectedForever]);
 
@@ -365,26 +378,6 @@ const VehicleForm: React.FC = () => {
     reader.readAsArrayBuffer(file);
   };
 
-  // Clear all data
-  const clearAllData = () => {
-    if (window.confirm('Sigur doriți să ștergeți toate datele? Această acțiune nu poate fi anulată!')) {
-      try {
-        localStorage.removeItem('vehicles');
-        setVehicles([]);
-        setFormData({
-          nr_inmatriculare: '',
-          valabilitate: calculateExpiryDate('1_an'), // Calculează automat data
-          perioada_valabilitate: '1_an',
-          nr_telefon: ''
-        });
-        setMessage('✅ Toate datele au fost șterse!');
-      } catch (error) {
-        console.error('Eroare la ștergerea datelor:', error);
-        setMessage('❌ Eroare la ștergerea datelor');
-      }
-    }
-  };
-
   // Edit vehicle
   const handleEditVehicle = (vehicle: Vehicle) => {
     setEditingVehicle(vehicle);
@@ -405,7 +398,10 @@ const VehicleForm: React.FC = () => {
   const handleUpdateVehicle = async (updatedVehicle: Vehicle) => {
     try {
       setLoading(true);
-      await updateVehicle(updatedVehicle);
+      if (!updatedVehicle.id) {
+        throw new Error('Vehicle ID is required for update');
+      }
+      await updateVehicle(updatedVehicle.id, updatedVehicle);
       
       // Refresh list
       const vehicleList = await getAllVehicles();
@@ -699,7 +695,7 @@ const VehicleForm: React.FC = () => {
                       type="file"
                       accept=".xlsx,.xls"
                       onChange={importFromExcel}
-                      style={{ display: 'none' }}
+                      className="hidden-file-input"
                       disabled={loading}
                     />
                   </div>
@@ -747,13 +743,15 @@ const VehicleForm: React.FC = () => {
                       onChange={(e) => setStayConnectedForever(e.target.checked)}
                     />
                     <label className="form-check-label fw-semibold" htmlFor="stayConnectedForever">
-                      🔒 Rămâi conectat (Forever)
+                      🔒 Rămâi conectat (Forever) - Persistent
                     </label>
                     <small className="d-block text-muted">
                       {stayConnectedForever ? 
-                        '🟡 Modul Forever ACTIV - Aplicația va rula non-stop și va preveni închiderea' : 
+                        '🟡 Modul Forever ACTIV - Aplicația va rula non-stop chiar și după refresh/restart browser' : 
                         '⚫ Modul Forever INACTIV - Aplicația poate fi închisă normal'
                       }
+                      <br />
+                      <em>💾 Setarea se salvează automat și rămâne activă permanent</em>
                     </small>
                   </div>
                   <div>
