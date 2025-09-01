@@ -533,7 +533,7 @@ const VehicleForm: React.FC = () => {
 
   return (
     <div className="vehicle-form-container">
-      <h1>� Notificare clienti ITP ( MISEDA INSPECT SRL )</h1>
+      <h1>🚗 Registru Vehicule - SMS Advert</h1>
       
       <div className="main-content">
         {/* Form Section */}

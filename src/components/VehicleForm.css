@@ -64,11 +64,14 @@ input[type="date"].form-control:focus {
   border-color: #059669 !important;
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15), 0 0 25px rgba(16, 185, 129, 0.3) !important;
   transform: translateY(-1px);
-}-container {
+}
+
+.vehicle-form-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 30px 20px;
+  padding: 20px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .vehicle-form-container h1 {
@@ -80,13 +83,23 @@ input[type="date"].form-control:focus {
   text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* Main Layout */
+/* Main Layout - New Vertical Structure */
+.top-section {
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.table-section {
+  width: 100%;
+}
+
+/* Remove the old grid layout */
 .main-content {
-  display: grid;
-  grid-template-columns: 450px 1fr;
-  gap: 30px;
-  max-width: 1400px;
-  margin: 0 auto;
+  display: block;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+  max-width: none;
 }
 
 /* Card Styling */
@@ -106,8 +119,7 @@ input[type="date"].form-control:focus {
   box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.2);
   margin: 0 auto 30px;
-  width: 95%;
-  max-width: 1200px;
+  width: 100%;
 }
 
 /* Form Controls */
@@ -255,6 +267,8 @@ input[type="date"].form-control:focus {
   overflow: hidden;
   box-shadow: 0 15px 50px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
+  max-height: 600px;
+  overflow-y: auto;
 }
 
 .vehicles-table {
@@ -468,11 +482,84 @@ input[type="date"].form-control:focus {
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* Responsive Design */
+/* Responsive Design - Optimizat pentru tabletă */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .vehicle-form-container {
+    padding: 30px 25px;
+  }
+  
+  .vehicle-form-container h1 {
+    font-size: 2.8rem;
+    margin-bottom: 25px;
+  }
+  
+  .form-section, .vehicles-section {
+    padding: 35px 30px;
+    margin-bottom: 25px;
+  }
+  
+  .form-group {
+    margin-bottom: 25px;
+  }
+  
+  .form-control {
+    padding: 15px 18px;
+    font-size: 1.1rem;
+  }
+  
+  .vehicle-nr-input {
+    font-size: 22px !important;
+    padding: 18px !important;
+  }
+  
+  .btn {
+    padding: 15px 30px;
+    font-size: 1.1rem;
+  }
+  
+  .page-navigation {
+    top: 20px;
+    right: 20px;
+    gap: 15px;
+  }
+  
+  .nav-button {
+    padding: 15px 30px;
+    font-size: 14px;
+  }
+  
+  .table th, .table td {
+    padding: 15px 12px;
+    font-size: 1rem;
+  }
+  
+  .vehicles-table-container {
+    max-height: 450px;
+  }
+}
+
+/* Responsive pentru noua structură verticală */
+@media (min-width: 1400px) {
+  .vehicle-form-container {
+    padding: 30px 60px;
+  }
+  
+  .vehicle-form-card, .vehicle-list-card {
+    padding: 40px;
+  }
+  
+  .vehicles-table-container {
+    max-height: 700px;
+  }
+}
+
 @media (max-width: 1024px) {
-  .main-content {
-    grid-template-columns: 1fr;
-    gap: 20px;
+  .vehicle-form-container {
+    padding: 20px;
+  }
+  
+  .top-section, .table-section {
+    margin-bottom: 20px;
   }
 }
 

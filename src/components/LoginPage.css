@@ -5,6 +5,8 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .login-box {
@@ -55,6 +57,7 @@
   color: white;
   font-size: 1rem;
   transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .form-control::placeholder {
@@ -96,4 +99,72 @@
 
 .btn-login:active {
   transform: translateY(0);
+}
+
+.remember-me-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.remember-me-group input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+}
+
+/* Optimizare pentru tabletă */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .login-container {
+    padding: 40px;
+  }
+  
+  .login-box {
+    max-width: 500px;
+    padding: 50px;
+  }
+  
+  .login-title {
+    font-size: 3rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .form-control {
+    padding: 15px 18px;
+    font-size: 1.1rem;
+  }
+  
+  .btn-login {
+    padding: 18px;
+    font-size: 1.2rem;
+  }
+  
+  .remember-me-group {
+    font-size: 1rem;
+  }
+}
+
+/* Optimizare pentru telefon */
+@media (max-width: 767px) {
+  .login-container {
+    padding: 15px;
+  }
+  
+  .login-box {
+    padding: 30px 25px;
+  }
+  
+  .login-title {
+    font-size: 2rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.9rem;
+  }
 }
